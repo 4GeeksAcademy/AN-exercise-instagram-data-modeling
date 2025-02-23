@@ -1,9 +1,8 @@
 import os
 import sys
-from sqlalchemy.orm import declarative_base, Mapped, mapped_column
-from sqlalchemy import Column,Integer,String,DataTime, ForeignKey
+from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy import Column,Integer,String,Date, ForeignKey
 from eralchemy2 import render_er
-from datatime import datatime
 Base = declarative_base()
 
 # Tabla Usuarios
@@ -15,7 +14,12 @@ class User(Base):
     password_hash = Column(String(100), nullable=False)
     full_name = Column(String(100), nullable=True)
     bio = Column(String(255), nullable=True)
-    data_at = Column(DataTime, default=datatime.utcnow)
+    create_at = Column(Date, nullable=False)
+    
+    #
+    post = relationship('Post', backref='author')
+    followers = relationship('Follower', backref='user', foreign_keys='Follower.user_id')
+    following = relationship('Follower', backref='follower', foreign_keys='Follower.follower_id')
 
 # Tabla Publicaciones
 class Post(Base):
@@ -24,7 +28,11 @@ class Post(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     img_url = Column(String(255), nullable=False)
     caption = Column(String(255), nullable=True)
-    data_posted = Column(DataTime, default=datatime.utcnow)
+    post_at = Column(Date, nullable=False)
+
+    # Relaciones
+    likes = relationship('Like', backref='post')
+    comments = relationship('Comment', backref='post')
 
 # Tabla Comentarios
 class Comment(Base):
@@ -33,20 +41,22 @@ class Comment(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     posts_id = Column(Integer, ForeignKey('posts.id'), nullable=False)
     text = Column(String(255), nullable=False)
-    data_commented = Column(DataTime, default=datatime.utcnow)
+    comment_at = Column(Date, nullable=False)
+
 # Tabla Likes
 class Like(Base):
     __tablename__ = 'likes' 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     post_id = Column(Integer, ForeignKey('posts.id'), nullable=False)
-    date_liked = Column(DataTime, default=datatime.utcnow)
+    liked_at = Column(Date, nullable=False)
 # Tabla Seguidores
 class Follower(Base):
     __tablename__ = 'followers'
     user_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     follower_id = Column(Integer, ForeignKey('users.id'), primary_key=True)
-    date_followed = Column(DataTime, default=datatime.utcnow)
+    followed_at = Column(Date, nullable=False)
+
 # Tabla Direct mensajes
 class DirectMessage(Base):
     __tablename__ = 'direct_messages'
@@ -54,8 +64,8 @@ class DirectMessage(Base):
     sender_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     receiver_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     message = Column(String(255), nullable=False)
-    data_sent = Column(DataTime, default=datatime.utcnow)
-    
+    sent_at = Column(Date, nullable=False)
+
 # class Person(Base):
 #     __tablename__ = 'person'
 #     # Here we define columns for the table person
